@@ -46,21 +46,23 @@ FROM ksprojects
 WHERE backers = 0
 GROUP BY main_category;
 
-/* 8. Calculate the average USD per backer
+/* 8. Calculate the average USD per backer for each category
 and only return results for which the average is < $50, sorted high to low. */
-SELECT AVG(usd_pledged/NULLIF(backers, 0)) AS USD_per_backer
+SELECT category, AVG(usd_pledged/NULLIF(backers, 0)) AS USD_per_backer
 FROM ksprojects
-HAVING AVG(usd_pledged/NULLIF(backers, 0)) > 50;
+GROUP by category
+HAVING AVG(usd_pledged/NULLIF(backers, 0)) < 50
+ORDER BY USD_per_backer DESC;
 
 -- 9. Count successful projects each main_category with [5, 10] backers
 SELECT main_category, COUNT(*)
 FROM ksprojects 
-WHERE backers BETWEEN 5 AND 10
+WHERE state = 'successful' AND backers BETWEEN 5 AND 10 
 GROUP BY main_category;
 
 /* 10. Sum up ‘pledged’ for each type of currency 
 and sort by ‘pledged’ from high to low. */
-SELECT SUM(pledged) AS total_pledged, currency
+SELECT currency, SUM(pledged) AS total_pledged
 FROM ksprojects
 GROUP BY currency
 ORDER BY total_pledged DESC;
@@ -71,8 +73,7 @@ where the total was more than 100,000.
 Sort by main_category from A to Z.*/
 SELECT main_category, SUM(backers) 
 FROM ksprojects
-WHERE state = 'successful' 
-      AND (main_category != 'Games' AND main_category != 'Technology')
+WHERE state = 'successful' AND main_category NOT IN('Games', 'Technology')
 GROUP BY main_category
 HAVING SUM(backers) > 100000
 ORDER BY main_category;
